@@ -13,27 +13,32 @@ const PointsScreen = ({ route }) => {
     // load points from AsyncStorage when the component mounts
     loadPoints();
   }, []);
-
+  
   useEffect(() => {
     // calculate points when weight, distance, or duration changes
     const newPoints = calculatePoints(weight, distance, duration);
     // update points state to accumulate points
-    setPoints(prevPoints => prevPoints + newPoints);
+    setPoints(prevPoints => {
+      if (typeof prevPoints === 'number' && !isNaN(prevPoints)) {
+        return prevPoints + newPoints;
+      } else {
+        return newPoints;
+      }
+    });
   }, [weight, distance, duration]);
 
   // function to calculate points using simple formula that multiplies values 
   const calculatePoints = (weight, distance, duration) => {
-    if (distance > 1) {
-      return weight * distance * duration;
-    } else {
-      return weight * duration;
-    }
+    const calculatedPoints = distance > 1 ? weight * distance * duration : weight * duration;
+    return isNaN(calculatedPoints) ? 0 : calculatedPoints;
   };
+  
 
   // function to load points from AsyncStorage
   const loadPoints = async () => {
     try {
       const storedPoints = await AsyncStorage.getItem('points');
+      console.log('Stored Points:', storedPoints);
       if (storedPoints) {
         setPoints(parseInt(storedPoints));
       }
